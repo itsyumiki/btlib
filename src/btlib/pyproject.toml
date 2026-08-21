@@ -1,6 +1,6 @@
 [project]
 name = "pybtlib"
-version = "0.0.3"
+version = "0.0.4"
 description = "A cross-platform Bluetooth library for Python"
 readme = "README.md"
 requires-python = ">=3.13"
