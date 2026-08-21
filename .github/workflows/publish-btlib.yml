@@ -45,7 +45,7 @@ jobs:
 
       - name: Build
         if: steps.version_check.outputs.changed == 'true'
-        run: uv build --package btlib
+        run: uv build --package pybtlib
 
       - name: Publish to PyPI
         if: steps.version_check.outputs.changed == 'true'
