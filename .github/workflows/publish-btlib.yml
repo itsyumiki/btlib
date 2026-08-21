@@ -1,0 +1,54 @@
+# .github/workflows/publish-btlib.yml
+name: Publish btlib to PyPI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/btlib/pyproject.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi-btlib
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if version changed
+        id: version_check
+        run: |
+          CURRENT=$(grep -m1 '^version' src/btlib/pyproject.toml | sed -E 's/version *= *"(.*)"/\1/')
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+
+          if git show HEAD^:src/btlib/pyproject.toml > /tmp/prev_pyproject.toml 2>/dev/null; then
+            PREVIOUS=$(grep -m1 '^version' /tmp/prev_pyproject.toml | sed -E 's/version *= *"(.*)"/\1/')
+          else
+            PREVIOUS=""
+          fi
+
+          if [[ "$CURRENT" != "$PREVIOUS" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: astral-sh/setup-uv@v7
+        if: steps.version_check.outputs.changed == 'true'
+
+      - name: Build
+        if: steps.version_check.outputs.changed == 'true'
+        run: uv build --package btlib
+
+      - name: Publish to PyPI
+        if: steps.version_check.outputs.changed == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
